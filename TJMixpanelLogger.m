@@ -49,8 +49,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     unsigned char bytes[kUUIDByteLength];
     [uuid getUUIDBytes:bytes];
     NSData *const data = [NSData dataWithBytesNoCopy:bytes length:kUUIDByteLength freeWhenDone:NO];
-    NSString *const string = [[data base64EncodedStringWithOptions:0]
-                              substringToIndex:22]; // Strip off trailing "=="
+    // distinct_id cannot contain slashes per https://help.mixpanel.com/hc/en-us/articles/115004509406-Distinct-IDs-
+    NSString *const string = [[[[data base64EncodedStringWithOptions:0]
+                                substringToIndex:22] // Strip off trailing "=="
+                               stringByReplacingOccurrencesOfString:@"+" withString:@"-"] // https://en.wikipedia.org/wiki/Base64#URL_applications
+                              stringByReplacingOccurrencesOfString:@"/" withString:@"_"]; // https://en.wikipedia.org/wiki/Base64#URL_applications
     return string;
 }
 

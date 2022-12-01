@@ -84,7 +84,17 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         uname(&systemInfo);
         deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
 #endif
-        if (([[NSProcessInfo processInfo] isMacCatalystApp] || [[NSProcessInfo processInfo] isiOSAppOnMac]) && deviceModel) {
+        BOOL isOnMac = NO;
+        if (@available(iOS 13.0, *)) {
+            if ([[NSProcessInfo processInfo] isMacCatalystApp]) {
+                isOnMac = YES;
+            } else if (@available(iOS 14.0, *)) {
+                if ([[NSProcessInfo processInfo] isiOSAppOnMac]) {
+                    isOnMac = YES;
+                }
+            }
+        }
+        if (isOnMac && deviceModel) {
             deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
         }
         
@@ -149,13 +159,17 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     [properties addEntriesFromDictionary:customProperties];
     
     NSMutableURLRequest *const request = [staticRequest mutableCopy];
+    NSJSONWritingOptions options = 0;
+    if (@available(iOS 13.0, *)) {
+        options = NSJSONWritingWithoutEscapingSlashes;
+    }
     [request setHTTPBody:[NSJSONSerialization dataWithJSONObject:@[
         @{
             @"event": name,
             @"properties": properties,
         }
     ]
-                                                         options:NSJSONWritingWithoutEscapingSlashes
+                                                         options:options
                                                            error:nil]];
 #if DEBUG
     [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {

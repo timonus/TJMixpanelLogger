@@ -174,14 +174,17 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     ]
                                                          options:options
                                                            error:nil]];
+    NSURLSessionTask *task;
 #if DEBUG
-    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+    task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         NSLog(@"%@ %@ %@", response, error, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-    }] resume];
+    }];
 #else
-    NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request];
-    [task resume];
+    task = [session downloadTaskWithRequest:request];
+    task.countOfBytesClientExpectsToReceive = 0;
 #endif
+    task.countOfBytesClientExpectsToSend = request.HTTPBody.length;
+    [task resume];
 }
 
 @end

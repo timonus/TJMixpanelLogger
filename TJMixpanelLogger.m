@@ -63,12 +63,12 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         return;
     }
     
-    NSString *const insertIdentifier = _uuidToBase64([NSUUID UUID]);
+    const NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
     
     // -performExpiringActivityWithReason:... has two benefits
     // (1) It keeps the process alive long enough to finish the work within its block. This is especially useful for extension which might be shortlived.
     // (2) It runs the work in the block on another thread so we avoid blocking the calling thread.
-    [[NSProcessInfo processInfo] performExpiringActivityWithReason:insertIdentifier usingBlock:^(BOOL expired) {
+    [[NSProcessInfo processInfo] performExpiringActivityWithReason:[NSString stringWithFormat:@"%@-%f", name, timestamp] usingBlock:^(BOOL expired) {
         if (expired) {
             return;
         }
@@ -164,8 +164,8 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         // https://developer.mixpanel.com/reference/track-event
         NSMutableDictionary *const properties = [staticProperties mutableCopy];
         [properties addEntriesFromDictionary:@{
-            @"time": @((unsigned long)([[NSDate date] timeIntervalSince1970] * 1000)),
-            @"$insert_id": insertIdentifier,
+            @"time": @((unsigned long)(timestamp * 1000)),
+            @"$insert_id": _uuidToBase64([NSUUID UUID]),
         }];
         
         [properties addEntriesFromDictionary:customProperties];

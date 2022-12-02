@@ -136,7 +136,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             if ([bundleIdentifierSuffix hasPrefix:mainAppBundleIdentifier]) {
                 bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:mainAppBundleIdentifier.length];
                 if ([bundleIdentifierSuffix hasPrefix:@"."]) { // Strip off leading "." as well
-                    [bundleIdentifierSuffix substringFromIndex:1];
+                    bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:1];
                 }
             }
             

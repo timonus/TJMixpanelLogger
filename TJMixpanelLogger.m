@@ -110,6 +110,26 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
             }
             
+            // Find "suffix" on top of main app bundle ID if this is an extension.
+            NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
+            // https://stackoverflow.com/a/62619735/3943258
+            for (; ![bundleURL.pathExtension isEqualToString:@"app"]; bundleURL = bundleURL.URLByDeletingLastPathComponent);
+            NSString *mainAppBundleIdentifier;
+            if (bundleURL) {
+                mainAppBundleIdentifier = [[NSBundle bundleWithURL:bundleURL] bundleIdentifier];
+            }
+            id bundleIdentifierSuffix = [[NSBundle mainBundle] bundleIdentifier];
+            if ([bundleIdentifierSuffix hasPrefix:mainAppBundleIdentifier]) {
+                bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:mainAppBundleIdentifier.length];
+                if ([bundleIdentifierSuffix hasPrefix:@"."]) { // Strip off leading "." as well
+                    bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:1];
+                }
+            }
+            
+            if (![bundleIdentifierSuffix length]) {
+                bundleIdentifierSuffix = [NSNull null];
+            }
+            
             // https://help.mixpanel.com/hc/en-us/articles/115004613766-Default-Properties-Collected-by-Mixpanel#ios
             // https://github.com/mixpanel/mixpanel-iphone/blob/master/Sources/Mixpanel.m#L510
             staticProperties = @{
@@ -121,30 +141,9 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 @"$screen_height": @((unsigned long)MAX(width, height)),
                 @"$screen_width": @((unsigned long)MIN(width, height)),
                 // Custom
-                @"language": [[NSLocale preferredLanguages] firstObject]
+                @"language": [[NSLocale preferredLanguages] firstObject],
+                @"bundle_id_suffix": bundleIdentifierSuffix,
             };
-            
-            // Find "suffix" on top of main app bundle ID if this is an extension.
-            NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
-            // https://stackoverflow.com/a/62619735/3943258
-            for (; ![bundleURL.pathExtension isEqualToString:@"app"]; bundleURL = bundleURL.URLByDeletingLastPathComponent);
-            NSString *mainAppBundleIdentifier;
-            if (bundleURL) {
-                mainAppBundleIdentifier = [[NSBundle bundleWithURL:bundleURL] bundleIdentifier];
-            }
-            NSString *bundleIdentifierSuffix = [[NSBundle mainBundle] bundleIdentifier];
-            if ([bundleIdentifierSuffix hasPrefix:mainAppBundleIdentifier]) {
-                bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:mainAppBundleIdentifier.length];
-                if ([bundleIdentifierSuffix hasPrefix:@"."]) { // Strip off leading "." as well
-                    bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:1];
-                }
-            }
-            
-            if (bundleIdentifierSuffix.length) {
-                NSMutableDictionary *mutableStaticProperties = [staticProperties mutableCopy];
-                mutableStaticProperties[@"bundle_id_suffix"] = bundleIdentifierSuffix;
-                staticProperties = [mutableStaticProperties copy];
-            }
             
             NSURLComponents *const components = [NSURLComponents componentsWithString:@"https://api.mixpanel.com/track"];
             

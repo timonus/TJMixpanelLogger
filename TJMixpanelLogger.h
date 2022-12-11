@@ -5,7 +5,7 @@
 //  Copyright (c) 2022 Tim Johnsen. All rights reserved.
 //
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 @interface TJMixpanelLogger : NSObject
 

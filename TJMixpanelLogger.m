@@ -5,11 +5,16 @@
 //  Copyright (c) 2022 Tim Johnsen. All rights reserved.
 //
 
-@import UIKit;
-@import CoreFoundation;
+#import <CoreFoundation/CoreFoundation.h>
+#import <sys/utsname.h>
+
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#else
+#import <UIKit/UIKit.h>
+#endif
 
 #import "TJMixpanelLogger.h"
-@import Darwin.POSIX.sys.utsname;
 
 __attribute__((objc_direct_members))
 @implementation TJMixpanelLogger
@@ -85,8 +90,15 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             _sessionConfiguration.discretionary = YES;
             session = [NSURLSession sessionWithConfiguration:_sessionConfiguration];
             
+#if TARGET_OS_WATCH
+            WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
+            const CGFloat width = device.screenBounds.size.width;
+            const CGFloat height = device.screenBounds.size.height;
+#else
+            UIDevice *const device = [UIDevice currentDevice];
             const CGFloat width = [UIScreen mainScreen].bounds.size.width;
             const CGFloat height = [UIScreen mainScreen].bounds.size.height;
+#endif
             
             NSString *deviceModel = nil;
 #if TARGET_IPHONE_SIMULATOR
@@ -97,10 +109,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
 #endif
             BOOL isOnMac = NO;
-            if (@available(iOS 13.0, *)) {
+            if (@available(iOS 13.0, watchOS 6.0, *)) {
                 if ([[NSProcessInfo processInfo] isMacCatalystApp]) {
                     isOnMac = YES;
-                } else if (@available(iOS 14.0, *)) {
+                } else if (@available(iOS 14.0, watchOS 7.0, *)) {
                     if ([[NSProcessInfo processInfo] isiOSAppOnMac]) {
                         isOnMac = YES;
                     }
@@ -137,9 +149,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             staticProperties = ^NSDictionary *{
                 NSMutableDictionary<NSString *, id> *const properties = [NSMutableDictionary dictionaryWithCapacity:9];
                 properties[@"token"] = _projectToken;
-                properties[@"distinct_id"] = _uuidToBase64([[UIDevice currentDevice] identifierForVendor]);
+                if (@available(watchOS 6.2, *)) {
+                    properties[@"distinct_id"] = _uuidToBase64([device identifierForVendor]);
+                }
                 properties[@"$app_version_string"] = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-                properties[@"$os_version"] = [[UIDevice currentDevice] systemVersion];
+                properties[@"$os_version"] = [device systemVersion];
                 properties[@"$model"] = deviceModel;
                 properties[@"$screen_height"] = @((unsigned long)MAX(width, height));
                 properties[@"$screen_width"] = @((unsigned long)MIN(width, height));
@@ -178,7 +192,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         
         NSMutableURLRequest *const request = [staticRequest mutableCopy];
         NSJSONWritingOptions options = 0;
-        if (@available(iOS 13.0, *)) {
+        if (@available(iOS 13.0, watchOS 6.0, *)) {
             options = NSJSONWritingWithoutEscapingSlashes;
         }
         [request setHTTPBody:[NSJSONSerialization dataWithJSONObject:@[
@@ -198,7 +212,9 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         task = [session downloadTaskWithRequest:request];
         task.countOfBytesClientExpectsToReceive = 0;
 #endif
-        task.countOfBytesClientExpectsToSend = request.HTTPBody.length;
+        if (@available(watchOS 4.0, *)) {
+            task.countOfBytesClientExpectsToSend = request.HTTPBody.length;
+        }
         [task resume];
     }];
 }

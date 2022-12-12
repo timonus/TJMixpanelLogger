@@ -87,7 +87,6 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             _sessionConfiguration.sharedContainerIdentifier = _sharedContainerIdentifier;
             _sessionConfiguration.sessionSendsLaunchEvents = NO;
             _sessionConfiguration.networkServiceType = NSURLNetworkServiceTypeBackground;
-            _sessionConfiguration.discretionary = YES;
             session = [NSURLSession sessionWithConfiguration:_sessionConfiguration];
             
 #if TARGET_OS_WATCH

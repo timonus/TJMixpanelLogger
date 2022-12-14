@@ -78,7 +78,6 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     [[NSProcessInfo processInfo] performExpiringActivityWithReason:reason usingBlock:^(BOOL expired) {
         @synchronized (reason) {
             if (!once) {
-                NSAssert(expired, @"performExpiringActivity was invoked with expired as YES initially!");
                 once = YES;
             } else {
                 return;

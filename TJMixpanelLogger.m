@@ -69,8 +69,22 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     }
     
     const NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
-    const id activity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityBackground | NSActivitySuddenTerminationDisabled |NSActivityAutomaticTerminationDisabled reason:[NSString stringWithFormat:@"%@-%f", name, timestamp]];
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+    
+    // -performExpiringActivityWithReason:... has two benefits
+    // (1) It keeps the process alive long enough to finish the work within its block. This is especially useful for extension which might be shortlived.
+    // (2) It runs the work in the block on another thread so we avoid blocking the calling thread.
+    __block BOOL once;
+    NSString *const reason = [NSString stringWithFormat:@"%@-%f", name, timestamp];
+    [[NSProcessInfo processInfo] performExpiringActivityWithReason:reason usingBlock:^(BOOL expired) {
+        @synchronized (reason) {
+            if (!once) {
+                NSAssert(expired, @"performExpiringActivity was invoked with expired as YES initially!");
+                once = YES;
+            } else {
+                return;
+            }
+        }
+        
         static NSDictionary<NSString *, id> *staticProperties;
         static NSURLRequest *staticRequest;
         static NSURLSession *session;
@@ -208,11 +222,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             task.countOfBytesClientExpectsToSend = request.HTTPBody.length;
         }
         [task resume];
-        
-        if (activity) {
-            [[NSProcessInfo processInfo] endActivity:activity];
-        }
-    });
+    }];
 }
 
 @end

@@ -73,7 +73,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     // -performExpiringActivityWithReason:... has two benefits
     // (1) It keeps the process alive long enough to finish the work within its block. This is especially useful for extension which might be shortlived.
     // (2) It runs the work in the block on another thread so we avoid blocking the calling thread.
-    __block BOOL once;
+    __block BOOL once = NO;
     NSString *const reason = [NSString stringWithFormat:@"%@-%f", name, timestamp];
     [[NSProcessInfo processInfo] performExpiringActivityWithReason:reason usingBlock:^(BOOL expired) {
         @synchronized (reason) {

@@ -189,7 +189,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         // https://developer.mixpanel.com/reference/track-event
         NSMutableDictionary *const properties = [staticProperties mutableCopy];
         [properties addEntriesFromDictionary:@{
-            @"time": @((unsigned long)(timestamp * 1000)),
+            @"time": @((unsigned long long)(timestamp * 1000)),
             @"$insert_id": _uuidToBase64([NSUUID UUID]),
         }];
         

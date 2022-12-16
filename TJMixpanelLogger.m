@@ -106,7 +106,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
 #endif
             
             NSString *deviceModel = nil;
-#if TARGET_IPHONE_SIMULATOR
+#if TARGET_OS_SIMULATOR
             deviceModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
 #else
             struct utsname systemInfo;

@@ -135,10 +135,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 uname(&systemInfo);
                 deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
             }
-#endif
             if (isOnMac && deviceModel) {
                 deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
             }
+#endif
             
             id bundleIdentifierSuffix = nil;
             

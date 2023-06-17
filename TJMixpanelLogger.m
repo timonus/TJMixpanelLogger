@@ -7,6 +7,7 @@
 
 #import <CoreFoundation/CoreFoundation.h>
 #import <sys/utsname.h>
+#import <sys/sysctl.h>
 
 #if TARGET_OS_WATCH
 #import <WatchKit/WatchKit.h>
@@ -109,10 +110,6 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
 #if TARGET_OS_SIMULATOR
             deviceModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
 #else
-            struct utsname systemInfo;
-            uname(&systemInfo);
-            deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
-#endif
             BOOL isOnMac = NO;
             if (@available(iOS 13.0, watchOS 6.0, *)) {
                 if ([[NSProcessInfo processInfo] isMacCatalystApp]) {
@@ -123,6 +120,22 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                     }
                 }
             }
+            if (isOnMac) {
+                // https://stackoverflow.com/a/13360637/3943258
+                size_t len = 0;
+                sysctlbyname("hw.model", NULL, &len, NULL, 0);
+                if (len) {
+                    char *model = malloc(len * sizeof(char));
+                    sysctlbyname("hw.model", model, &len, NULL, 0);
+                    deviceModel = [[NSString alloc] initWithBytesNoCopy:model length:len encoding:NSUTF8StringEncoding freeWhenDone:YES];
+                }
+            }
+            if (!deviceModel) {
+                struct utsname systemInfo;
+                uname(&systemInfo);
+                deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
+            }
+#endif
             if (isOnMac && deviceModel) {
                 deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
             }

@@ -139,6 +139,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             if (isOnMac && deviceModel) {
                 deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
             }
+            BOOL isOnVisionOS = (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil);
+            if (isOnVisionOS && ![deviceModel hasPrefix:@"Reality"] && ![deviceModel hasPrefix:@"Vision"]) {
+                deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+            }
 #endif
             
             id bundleIdentifierSuffix = nil;

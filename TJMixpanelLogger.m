@@ -136,12 +136,12 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 uname(&systemInfo);
                 deviceModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding]; // https://stackoverflow.com/a/11197770/3943258
             }
-            if (isOnMac && deviceModel) {
-                deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
-            }
-            BOOL isOnVisionOS = (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil);
-            if (isOnVisionOS && ![deviceModel hasPrefix:@"Reality"] && ![deviceModel hasPrefix:@"Vision"]) {
-                deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+            if (deviceModel) {
+                if (isOnMac) {
+                    deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
+                } else if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG
+                    deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+                }
             }
 #endif
             

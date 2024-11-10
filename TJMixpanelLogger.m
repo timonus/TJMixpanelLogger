@@ -22,6 +22,7 @@ __attribute__((objc_direct_members))
 
 static NSString *_projectToken;
 static NSString *_sharedContainerIdentifier;
+static NSDictionary *_customProperties;
 
 static NSURLSessionConfiguration *_sessionConfiguration;
 
@@ -46,6 +47,16 @@ static NSURLSessionConfiguration *_sessionConfiguration;
 + (NSString *)sharedContainerIdentifier
 {
     return _sharedContainerIdentifier;
+}
+
++ (void)setCustomProperties:(NSDictionary *)customProperties
+{
+    _customProperties = [customProperties copy];
+}
+
++ (NSDictionary *)customProperties
+{
+    return _customProperties;
 }
 
 static const NSUInteger kUUIDByteLength = 16; // Per docs, NSUUIDs are 16 bytes in length
@@ -206,6 +217,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         
         // https://developer.mixpanel.com/reference/track-event
         NSMutableDictionary *const properties = [staticProperties mutableCopy];
+        NSDictionary *const customProperties = self.customProperties;
+        if (customProperties) {
+            [properties addEntriesFromDictionary:customProperties];
+        }
         [properties addEntriesFromDictionary:@{
             @"time": @((unsigned long long)(timestamp * 1000)),
             @"$insert_id": _uuidToBase64([NSUUID UUID]),

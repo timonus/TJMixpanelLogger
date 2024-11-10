@@ -12,6 +12,8 @@
 @property (nonatomic, copy, class) NSString *projectToken;
 @property (nonatomic, copy, class) NSString *sharedContainerIdentifier;
 
+@property (nonatomic, copy, class) NSDictionary *customProperties; // Sent in every event
+
 + (void)logEventWithName:(NSString *)name properties:(NSDictionary *)customProperties;
 
 @end

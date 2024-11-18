@@ -73,7 +73,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     return string;
 }
 
-+ (void)logEventWithName:(NSString *const)name properties:(NSDictionary *const)customProperties
++ (void)logEventWithName:(NSString *const)name properties:(NSDictionary *const)eventProperties
 {
     if (name.length == 0 || _projectToken.length == 0) {
         NSLog(@"Invalid %s", __PRETTY_FUNCTION__);
@@ -226,7 +226,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             @"$insert_id": _uuidToBase64([NSUUID UUID]),
         }];
         
-        [properties addEntriesFromDictionary:customProperties];
+        [properties addEntriesFromDictionary:eventProperties];
         
         NSMutableURLRequest *const request = [staticRequest mutableCopy];
         NSJSONWritingOptions options = 0;

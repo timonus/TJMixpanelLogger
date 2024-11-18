@@ -94,21 +94,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         _sessionConfiguration.timeoutIntervalForResource = 22776000; // 1 year
         session = [NSURLSession sessionWithConfiguration:_sessionConfiguration];
         
-#if TARGET_OS_WATCH
-        WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
-        const CGFloat width = device.screenBounds.size.width;
-        const CGFloat height = device.screenBounds.size.height;
-#else
-        UIDevice *const device = [UIDevice currentDevice];
-        const CGFloat width = [UIScreen mainScreen].bounds.size.width;
-        const CGFloat height = [UIScreen mainScreen].bounds.size.height;
-#endif
-        
         NSString *deviceModel = nil;
+        BOOL isOnMac = NO;
 #if TARGET_OS_SIMULATOR
         deviceModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
 #else
-        BOOL isOnMac = NO;
         if (@available(iOS 13.0, watchOS 6.0, *)) {
             if ([[NSProcessInfo processInfo] isMacCatalystApp]) {
                 isOnMac = YES;
@@ -138,6 +128,30 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
             } else if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG
                 deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+            }
+        }
+#endif
+        
+#if TARGET_OS_WATCH
+        WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
+        const CGFloat width = device.screenBounds.size.width;
+        const CGFloat height = device.screenBounds.size.height;
+#else
+        UIDevice *const device = [UIDevice currentDevice];
+        NSNumber *screenWidth;
+        NSNumber *screenHeight;
+        if (isOnMac) {
+            screenWidth = nil;
+            screenHeight = nil;
+        } else {
+            UIScreen *const screen = [UIScreen mainScreen];
+            if (screen != nil) {
+                const CGSize screenSize = screen.bounds.size;
+                screenWidth = @(MIN(screenSize.width, screenSize.height));
+                screenHeight = @(MAX(screenSize.width, screenSize.height));
+            } else {
+                screenWidth = nil;
+                screenHeight = nil;
             }
         }
 #endif
@@ -175,8 +189,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             properties[@"$app_version_string"] = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
             properties[@"$os_version"] = [device systemVersion];
             properties[@"$model"] = deviceModel;
-            properties[@"$screen_height"] = @((unsigned long)MAX(width, height));
-            properties[@"$screen_width"] = @((unsigned long)MIN(width, height));
+            if (screenWidth != nil && screenHeight != nil) {
+                properties[@"$screen_height"] = screenHeight;
+                properties[@"$screen_width"] = screenWidth;
+            }
             // Custom
             properties[@"language"] = [[NSLocale preferredLanguages] firstObject];
             properties[@"bundle_id_suffix"] = bundleIdentifierSuffix;

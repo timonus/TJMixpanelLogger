@@ -17,6 +17,58 @@
 
 #import "TJMixpanelLogger.h"
 
+#import <zlib.h>
+
+// Thanks Claude https://tijo.link/BGdVNx
+static NSData *_gzipCompressData(NSData *const data, NSError **error) {
+   if (!data.length) {
+       if (error) {
+           *error = [NSError errorWithDomain:@"CompressionErrorDomain" code:1
+               userInfo:@{NSLocalizedDescriptionKey: @"Invalid input data"}];
+       }
+       return nil;
+   }
+   
+   z_stream strm;
+   strm.zalloc = Z_NULL;
+   strm.zfree = Z_NULL;
+   strm.opaque = Z_NULL;
+   
+   // Initialize deflate with gzip format
+   if (deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+       if (error) {
+           *error = [NSError errorWithDomain:@"CompressionErrorDomain" code:2
+               userInfo:@{NSLocalizedDescriptionKey: @"Failed to initialize compression"}];
+       }
+       return nil;
+   }
+   
+   // Set up input
+   strm.avail_in = (uInt)data.length;
+   strm.next_in = (Bytef *)data.bytes;
+   
+   // Prepare output buffer (compress can increase size)
+   NSMutableData *compressedData = [NSMutableData dataWithLength:data.length * 1.1 + 12];
+   strm.avail_out = (uInt)compressedData.length;
+   strm.next_out = compressedData.mutableBytes;
+   
+   // Compress
+   if (deflate(&strm, Z_FINISH) != Z_STREAM_END) {
+       deflateEnd(&strm);
+       if (error) {
+           *error = [NSError errorWithDomain:@"CompressionErrorDomain" code:3
+               userInfo:@{NSLocalizedDescriptionKey: @"Compression failed"}];
+       }
+       return nil;
+   }
+   
+   // Cleanup and finalize
+   [compressedData setLength:strm.total_out];
+   deflateEnd(&strm);
+   
+   return compressedData;
+}
+
 __attribute__((objc_direct_members))
 @implementation TJMixpanelLogger
 
@@ -249,14 +301,23 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         if (@available(iOS 13.0, watchOS 6.0, *)) {
             options = NSJSONWritingWithoutEscapingSlashes;
         }
-        [request setHTTPBody:[NSJSONSerialization dataWithJSONObject:@[
+        NSData *body = [NSJSONSerialization dataWithJSONObject:@[
             @{
                 @"event": name,
                 @"properties": properties,
             }
         ]
-                                                             options:options
-                                                               error:nil]];
+                                                       options:options
+                                                         error:nil];
+        NSError *error;
+        // gzip compress https://developer.mixpanel.com/reference/import-events
+        NSData *const compressedBody = _gzipCompressData(body, &error);
+        if (error != nil && body.length > 0) {
+            [request setHTTPBody:body];
+        } else {
+            [request setValue:@"gzip" forHTTPHeaderField:@"Content-Encoding"];
+            [request setHTTPBody:compressedBody];
+        }
         NSURLSessionTask *task;
 #if DEBUG
         task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {

@@ -312,11 +312,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         NSError *error;
         // gzip compress https://developer.mixpanel.com/reference/import-events
         NSData *const compressedBody = _gzipCompressData(body, &error);
-        if (error != nil && body.length > 0) {
-            [request setHTTPBody:body];
-        } else {
+        if (error == nil && compressedBody.length > 0 && compressedBody.length < body.length) {
             [request setValue:@"gzip" forHTTPHeaderField:@"Content-Encoding"];
             [request setHTTPBody:compressedBody];
+        } else {
+            [request setHTTPBody:body];
         }
         NSURLSessionTask *task;
 #if DEBUG

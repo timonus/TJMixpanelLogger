@@ -127,8 +127,13 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
 
 + (void)logEventWithName:(NSString *const)name properties:(NSDictionary *const)eventProperties
 {
-    if (name.length == 0 || _projectToken.length == 0) {
-        NSLog(@"Invalid %s", __PRETTY_FUNCTION__);
+    if (name.length == 0) {
+        NSLog(@"[TJMixpanelLogger] Invalid event name %s", __PRETTY_FUNCTION__);
+        return;
+    }
+    
+    if (_projectToken.length == 0) {
+        NSLog(@"[TJMixpanelLogger] Invalid project token %s", __PRETTY_FUNCTION__);
         return;
     }
     

@@ -189,14 +189,14 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         }
 #endif
         
-#if TARGET_OS_WATCH
-        WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
-        const CGFloat width = device.screenBounds.size.width;
-        const CGFloat height = device.screenBounds.size.height;
-#else
-        UIDevice *const device = [UIDevice currentDevice];
         NSNumber *screenWidth;
         NSNumber *screenHeight;
+#if TARGET_OS_WATCH
+        WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
+        screenWidth = @(device.screenBounds.size.width);
+        screenHeight = @(device.screenBounds.size.height);
+#else
+        UIDevice *const device = [UIDevice currentDevice];
         if (isOnMac) {
             screenWidth = nil;
             screenHeight = nil;

@@ -142,6 +142,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     static NSDictionary<NSString *, id> *staticProperties;
     static NSURLRequest *staticRequest;
     static NSURLSession *session;
+    static NSJSONWritingOptions options;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         _sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:[NSString stringWithFormat:@"com.tijo.logger.%@", [[NSUUID UUID] UUIDString]]];
@@ -272,6 +273,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
             return [request copy];
         }();
+        
+        NSJSONWritingOptions options = 0;
+        if (@available(iOS 13.0, watchOS 6.0, *)) {
+            options = NSJSONWritingWithoutEscapingSlashes;
+        }
     });
     
     // -performExpiringActivityWithReason:... has two benefits
@@ -302,10 +308,6 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         [properties addEntriesFromDictionary:eventProperties];
         
         NSMutableURLRequest *const request = [staticRequest mutableCopy];
-        NSJSONWritingOptions options = 0;
-        if (@available(iOS 13.0, watchOS 6.0, *)) {
-            options = NSJSONWritingWithoutEscapingSlashes;
-        }
         NSData *body = [NSJSONSerialization dataWithJSONObject:@[
             @{
                 @"event": name,

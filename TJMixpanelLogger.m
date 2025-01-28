@@ -76,8 +76,6 @@ static NSString *_projectToken;
 static NSString *_sharedContainerIdentifier;
 static NSDictionary *_customProperties;
 
-static NSURLSessionConfiguration *_sessionConfiguration;
-
 + (void)setProjectToken:(NSString *)trackingIdentifier
 {
     _projectToken = trackingIdentifier;
@@ -90,10 +88,7 @@ static NSURLSessionConfiguration *_sessionConfiguration;
 
 + (void)setSharedContainerIdentifier:(NSString *)sharedContainerIdentifier
 {
-    if (![_sharedContainerIdentifier isEqual:sharedContainerIdentifier]) {
-        _sharedContainerIdentifier = sharedContainerIdentifier;
-        _sessionConfiguration.sharedContainerIdentifier = sharedContainerIdentifier;
-    }
+    _sharedContainerIdentifier = sharedContainerIdentifier;
 }
 
 + (NSString *)sharedContainerIdentifier
@@ -145,12 +140,12 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     static NSJSONWritingOptions options;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:[NSString stringWithFormat:@"com.tijo.logger.%@", [[NSUUID UUID] UUIDString]]];
-        _sessionConfiguration.sharedContainerIdentifier = _sharedContainerIdentifier;
-        _sessionConfiguration.sessionSendsLaunchEvents = NO;
-        _sessionConfiguration.networkServiceType = NSURLNetworkServiceTypeBackground;
-        _sessionConfiguration.timeoutIntervalForResource = 22776000; // 1 year
-        session = [NSURLSession sessionWithConfiguration:_sessionConfiguration];
+        NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:[NSString stringWithFormat:@"com.tijo.logger.%@", [[NSUUID UUID] UUIDString]]];
+        sessionConfiguration.sharedContainerIdentifier = _sharedContainerIdentifier;
+        sessionConfiguration.sessionSendsLaunchEvents = NO;
+        sessionConfiguration.networkServiceType = NSURLNetworkServiceTypeBackground;
+        sessionConfiguration.timeoutIntervalForResource = 22776000; // 1 year
+        session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
         
         NSString *deviceModel = nil;
         BOOL isOnMac = NO;

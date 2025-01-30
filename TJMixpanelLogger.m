@@ -269,9 +269,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             return [request copy];
         }();
         
-        NSJSONWritingOptions options = 0;
         if (@available(iOS 13.0, watchOS 6.0, *)) {
             options = NSJSONWritingWithoutEscapingSlashes;
+        } else {
+            options = 0;
         }
     });
     

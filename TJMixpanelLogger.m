@@ -145,8 +145,9 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         sessionConfiguration.sessionSendsLaunchEvents = NO;
         sessionConfiguration.networkServiceType = NSURLNetworkServiceTypeBackground;
         sessionConfiguration.timeoutIntervalForResource = 22776000; // 1 year
+        sessionConfiguration.HTTPAdditionalHeaders = @{@"Content-Type": @"application/json"};
+        sessionConfiguration.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
         session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
-        
         NSString *deviceModel = nil;
         BOOL isOnMac = NO;
 #if TARGET_OS_SIMULATOR
@@ -264,8 +265,6 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         staticRequest = ^NSURLRequest *{
             NSMutableURLRequest *const request = [NSMutableURLRequest requestWithURL:components.URL];
             [request setHTTPMethod:@"POST"];
-            [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-            request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
             return [request copy];
         }();
         

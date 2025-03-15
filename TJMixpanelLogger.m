@@ -238,7 +238,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             NSMutableDictionary<NSString *, id> *const properties = [NSMutableDictionary dictionaryWithCapacity:9];
             properties[@"token"] = _projectToken;
             if (@available(watchOS 6.2, *)) {
-                properties[@"distinct_id"] = _uuidToBase64([device identifierForVendor]);
+                properties[@"distinct_id"] = [self distinctIdentifier];
             }
             properties[@"$app_version_string"] = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
             properties[@"$os_version"] = [device systemVersion];
@@ -334,6 +334,16 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         }
         [task resume];
     }];
+}
+
++ (NSString *)distinctIdentifier
+{
+#if TARGET_OS_WATCH
+    WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
+#else
+    UIDevice *const device = [UIDevice currentDevice];
+#endif
+    return _uuidToBase64([device identifierForVendor]);
 }
 
 @end

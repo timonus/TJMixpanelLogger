@@ -16,4 +16,6 @@
 
 + (void)logEventWithName:(NSString *)name properties:(NSDictionary *)customProperties;
 
++ (NSString *)distinctIdentifier;
+
 @end

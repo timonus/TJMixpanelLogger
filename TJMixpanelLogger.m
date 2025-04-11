@@ -179,7 +179,9 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         }
         if (deviceModel) {
             if (isOnMac) {
-                deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
+                if (![deviceModel hasPrefix:@"Mac"]) {
+                    deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
+                }
             } else if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG
                 deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
             }

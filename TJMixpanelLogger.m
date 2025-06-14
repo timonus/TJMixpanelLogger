@@ -106,7 +106,7 @@ static NSDictionary *_customProperties;
     return _customProperties;
 }
 
-static const NSUInteger kUUIDByteLength = 16; // Per docs, NSUUIDs are 16 bytes in length
+#define kUUIDByteLength 16 // Per docs, NSUUIDs are 16 bytes in length
 
 static NSString *_uuidToBase64(NSUUID *const uuid)
 {

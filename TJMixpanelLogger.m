@@ -230,7 +230,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 }
             }
             if (![bundleIdentifierSuffix length]) {
-                bundleIdentifierSuffix = [NSNull null];
+                bundleIdentifierSuffix = nil;
             }
         }
         

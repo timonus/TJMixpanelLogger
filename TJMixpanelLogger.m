@@ -182,8 +182,21 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 if (![deviceModel hasPrefix:@"Mac"]) {
                     deviceModel = [@"Mac-" stringByAppendingString:deviceModel];
                 }
-            } else if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG
-                deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+            } else {
+                BOOL isOnVision;
+#if defined(__IPHONE_26_1) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_26_1
+                if (@available(iOS 26.1, *)) {
+                    isOnVision = [[NSProcessInfo processInfo] isiOSAppOnVision];
+                } else
+#endif
+                if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG
+                    isOnVision = YES;
+                } else {
+                    isOnVision = NO;
+                }
+                if (isOnVision) {
+                    deviceModel = [@"Vision-" stringByAppendingString:deviceModel];
+                }
             }
         }
 #endif

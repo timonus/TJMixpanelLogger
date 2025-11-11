@@ -185,8 +185,11 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
             } else {
                 BOOL isOnVision;
 #if defined(__IPHONE_26_1) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_26_1
-                if (@available(iOS 26.1, *)) {
+                if ([[NSProcessInfo processInfo] respondsToSelector:@selector(isiOSAppOnVision)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
                     isOnVision = [[NSProcessInfo processInfo] isiOSAppOnVision];
+#pragma clang diagnostic pop
                 } else
 #endif
                 if (NSClassFromString(@"UIWindowSceneGeometryPreferencesVision") != nil) { // https://tijo.link/RyvNUG

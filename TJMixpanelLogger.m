@@ -228,7 +228,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         }
 #endif
         
-        id bundleIdentifierSuffix = nil;
+        NSString *bundleIdentifierSuffix = nil;
         
         // Find "suffix" on top of main app bundle ID if this app has extensions and we're currently running in an extension.
         NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
@@ -238,15 +238,17 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         const BOOL hasExtensions = [[NSFileManager defaultManager] fileExistsAtPath:pluginsPath];
         if (hasExtensions) {
             NSString *const mainAppBundleIdentifier = [[NSBundle bundleWithURL:bundleURL] bundleIdentifier];
-            bundleIdentifierSuffix = [[NSBundle mainBundle] bundleIdentifier];
-            if ([bundleIdentifierSuffix hasPrefix:mainAppBundleIdentifier]) {
-                bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:mainAppBundleIdentifier.length];
-                if ([bundleIdentifierSuffix hasPrefix:@"."]) { // Strip off leading "." as well
-                    bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:1];
+            if (mainAppBundleIdentifier) {
+                bundleIdentifierSuffix = [[NSBundle mainBundle] bundleIdentifier];
+                if ([bundleIdentifierSuffix hasPrefix:mainAppBundleIdentifier]) {
+                    bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:mainAppBundleIdentifier.length];
+                    if ([bundleIdentifierSuffix hasPrefix:@"."]) { // Strip off leading "." as well
+                        bundleIdentifierSuffix = [bundleIdentifierSuffix substringFromIndex:1];
+                    }
                 }
-            }
-            if (![bundleIdentifierSuffix length]) {
-                bundleIdentifierSuffix = nil;
+                if (![bundleIdentifierSuffix length]) {
+                    bundleIdentifierSuffix = nil;
+                }
             }
         }
         

@@ -233,7 +233,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         // Find "suffix" on top of main app bundle ID if this app has extensions and we're currently running in an extension.
         NSURL *bundleURL = [[NSBundle mainBundle] bundleURL];
         // https://stackoverflow.com/a/62619735/3943258
-        for (; ![bundleURL.pathExtension isEqualToString:@"app"]; bundleURL = bundleURL.URLByDeletingLastPathComponent);
+        for (; bundleURL != nil && ![bundleURL.pathExtension isEqualToString:@"app"]; bundleURL = bundleURL.URLByDeletingLastPathComponent);
         NSString *const pluginsPath = [bundleURL.path stringByAppendingPathComponent:@"PlugIns"];
         const BOOL hasExtensions = [[NSFileManager defaultManager] fileExistsAtPath:pluginsPath];
         if (hasExtensions) {

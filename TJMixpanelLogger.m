@@ -148,6 +148,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         sessionConfiguration.HTTPAdditionalHeaders = @{@"Content-Type": @"application/json"};
         sessionConfiguration.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
         session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
+        session.sessionDescription = @"TJMixpanelLogger";
         NSString *deviceModel = nil;
         BOOL isOnMac = NO;
 #if TARGET_OS_SIMULATOR

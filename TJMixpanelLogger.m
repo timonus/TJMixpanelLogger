@@ -236,7 +236,12 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         // https://stackoverflow.com/a/62619735/3943258
         for (; bundleURL != nil && ![bundleURL.pathExtension isEqualToString:@"app"]; bundleURL = bundleURL.URLByDeletingLastPathComponent);
         NSString *const pluginsPath = [bundleURL.path stringByAppendingPathComponent:@"PlugIns"];
-        const BOOL hasExtensions = [[NSFileManager defaultManager] fileExistsAtPath:pluginsPath];
+        BOOL hasExtensions;
+        if (pluginsPath) {
+            hasExtensions = [[NSFileManager defaultManager] fileExistsAtPath:pluginsPath];
+        } else {
+            hasExtensions = NO;
+        }
         if (hasExtensions) {
             NSString *const mainAppBundleIdentifier = [[NSBundle bundleWithURL:bundleURL] bundleIdentifier];
             if (mainAppBundleIdentifier) {

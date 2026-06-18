@@ -364,12 +364,17 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
 
 + (NSString *)distinctIdentifier
 {
+    static NSString *distinctIdentifier;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
 #if TARGET_OS_WATCH
-    WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
+        WKInterfaceDevice *const device = [WKInterfaceDevice currentDevice];
 #else
-    UIDevice *const device = [UIDevice currentDevice];
+        UIDevice *const device = [UIDevice currentDevice];
 #endif
-    return _uuidToBase64([device identifierForVendor]);
+        distinctIdentifier = _uuidToBase64([device identifierForVendor]);
+    });
+    return distinctIdentifier;
 }
 
 @end

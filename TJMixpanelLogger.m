@@ -213,9 +213,12 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         screenHeight = @(device.screenBounds.size.height);
 #else
         UIDevice *const device = [UIDevice currentDevice];
+#if defined(__IPHONE_26_0) && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_26_0
         if (isOnMac) {
             screenWidth = nil;
             screenHeight = nil;
+        } else if (@available(iOS 26.0, *)) {
+            // UIScreen.mainScreen deprecated in iOS 26, and with the iPhone Duo who knows what it'll be
         } else {
             UIScreen *const screen = [UIScreen mainScreen];
             if (screen != nil) {
@@ -227,6 +230,10 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
                 screenHeight = nil;
             }
         }
+#else
+        screenWidth = nil;
+        screenHeight = nil;
+#endif
 #endif
         
         NSString *bundleIdentifierSuffix = nil;

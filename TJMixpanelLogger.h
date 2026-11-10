@@ -19,3 +19,5 @@
 + (NSString *)distinctIdentifier;
 
 @end
+
+extern NSString *TJUUIDString(NSUUID *const uuid);

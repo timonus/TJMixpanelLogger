@@ -120,6 +120,49 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
     return string;
 }
 
+typedef unsigned __int128 u128;
+
+// Loads the 16 UUID bytes into a 128-bit integer, big-endian,
+// so integer order matches the UUID's byte order.
+static inline u128 U128FromUUID(NSUUID *uuid) {
+    uuid_t b;
+    [uuid getUUIDBytes:b];
+    u128 x = 0;
+    for (int i = 0; i < 16; i++) {
+        x = (x << 8) | b[i];
+    }
+    return x;
+}
+
+#define MASK62 ((((u128)1) << 62) - 1)
+
+// Removes the 4 version bits (76–79) and 2 variant bits (62–63),
+// leaving a 122-bit value with the same sort order.
+static inline u128 PackV4(u128 x) {
+    NSCParameterAssert(((x >> 76) & 0xF) == 4 && ((x >> 62) & 0x3) == 2);
+    u128 top48 = x >> 80;
+    u128 mid12 = (x >> 64) & 0xFFF;
+    u128 low62 = x & MASK62;
+    return (top48 << 74) | (mid12 << 62) | low62;
+}
+
+// Particular bits from V4 UUIDs are always the same, this function discards those.
+NSString *TJUUIDString(NSUUID *const uuid)
+{
+    // Standard Base64 alphabet with '/' replaced by '-' (Mixpanel distinct_ids can't contain slashes).
+    static const char kAlphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
+
+    const u128 x = U128FromUUID(uuid);
+
+    // 122 bits + 4 zero bits of padding = 126 bits = 21 characters × 6 bits.
+    const u128 bits = PackV4(x) << 4;
+    char chars[21];
+    for (int i = 0; i < 21; i++) {
+        chars[i] = kAlphabet[(bits >> (120 - 6 * i)) & 0x3F];
+    }
+    return [[NSString alloc] initWithBytes:chars length:21 encoding:NSASCIIStringEncoding];
+}
+
 + (void)logEventWithName:(NSString *const)name properties:(NSDictionary *const)eventProperties
 {
     if (name.length == 0) {
@@ -330,7 +373,7 @@ static NSString *_uuidToBase64(NSUUID *const uuid)
         }
         [properties addEntriesFromDictionary:@{
             @"time": @((unsigned long long)(timestamp * 1000)),
-            @"$insert_id": _uuidToBase64([NSUUID UUID]),
+            @"$insert_id": TJUUIDString([NSUUID UUID]),
         }];
         
         [properties addEntriesFromDictionary:eventProperties];
